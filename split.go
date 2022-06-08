@@ -127,7 +127,7 @@ func splitReal(c *config) (err error) {
 
 	_, err = io.Copy(tfile, ifile)
 	if err != nil {
-		return fmt.Errorf("copy split to tempfile: %w", err)
+		return fmt.Errorf("copy inputfile tail to tempfile: %w", err)
 	}
 	ifile.Close()
 	err = tfile.Close()
