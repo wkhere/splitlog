@@ -7,9 +7,10 @@ import (
 )
 
 type config struct {
-	matcher   matcher
-	src, dst  string
-	overwrite bool
+	matcher    matcher
+	src, dst   string
+	overwrite  bool
+	nLinesBack int
 
 	dryrun bool
 	help   func(io.Writer)

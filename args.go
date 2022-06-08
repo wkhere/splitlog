@@ -12,6 +12,7 @@ func parseArgs(args []string) (c config, _ error) {
 	var (
 		line    uint
 		pattern string
+		back    uint
 		help    bool
 	)
 
@@ -22,6 +23,11 @@ func parseArgs(args []string) (c config, _ error) {
 		"split at i-th line")
 	flag.StringVarP(&pattern, "pattern", "p", "",
 		"split at given pattern")
+	flag.UintVarP(&back, "back-from-match", "b", 0,
+		fmt.Sprintf(
+			"number of lines to go back from the match, max=%d",
+			maxLinesBack,
+		))
 	flag.BoolVarP(&c.overwrite, "force", "f", false,
 		"force overwriting SPLIT file if exists")
 	flag.BoolVarP(&c.dryrun, "dry-run", "n", false,
@@ -71,6 +77,13 @@ func parseArgs(args []string) (c config, _ error) {
 			return c, err
 		}
 		c.matcher = m
+	}
+
+	if flag.Changed("back-from-match") {
+		if back > maxLinesBack {
+			return c, fmt.Errorf("max value for -b is %d", maxLinesBack)
+		}
+		c.nLinesBack = int(back)
 	}
 
 	rest := flag.Args()

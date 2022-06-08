@@ -12,10 +12,10 @@ type matcher interface {
 	matchFrom(*counterReader) bool
 }
 
-type linematcher uint
+type linematcher int
 
 func (m linematcher) matchFrom(r *counterReader) bool {
-	return uint(m) == r.lineno
+	return int(m) == r.lineno
 }
 
 type rxmatcher struct{ *regexp.Regexp }
@@ -24,11 +24,14 @@ func (m rxmatcher) matchFrom(r *counterReader) bool {
 	return m.Match(r.lastb)
 }
 
+const maxLinesBack = 5
+
 type counterReader struct {
 	*bufio.Reader
-	lastb               []byte
-	lineno              uint
-	lineoffset, lineend int64
+	lastb       []byte
+	lineno      int
+	lineoffsets [maxLinesBack + 1]int64
+	lineend     int64
 }
 
 func (r *counterReader) readBytes() (n int, err error) {
@@ -37,7 +40,8 @@ func (r *counterReader) readBytes() (n int, err error) {
 	if err == nil || n > 0 {
 		r.lineno++
 	}
-	r.lineoffset = r.lineend
+	copy(r.lineoffsets[1:], r.lineoffsets[:])
+	r.lineoffsets[0] = r.lineend
 	r.lineend += int64(n)
 	return n, err
 }
@@ -96,9 +100,24 @@ func splitReal(c *config) (err error) {
 		return removeSplit(c.dst, "split place not found")
 	}
 
-	if reader.lineno == 1 {
+	var (
+		splitline   = reader.lineno - c.nLinesBack
+		splitoffset = reader.lineoffsets[c.nLinesBack]
+	)
+
+	if splitline < 1 {
+		ofile.Close()
+		return removeSplit(c.dst, "not splitting at line < 1")
+	}
+	if splitline == 1 {
 		ofile.Close()
 		return removeSplit(c.dst, "not splitting at line 1")
+	}
+	if c.nLinesBack > 0 {
+		err = ofile.Truncate(splitoffset)
+		if err != nil {
+			return fmt.Errorf("truncate split file: %w", err)
+		}
 	}
 
 	err = ofile.Close()
@@ -106,7 +125,7 @@ func splitReal(c *config) (err error) {
 		return fmt.Errorf("close split file: %w", err)
 	}
 
-	_, err = ifile.Seek(reader.lineoffset, 0)
+	_, err = ifile.Seek(splitoffset, 0)
 	if err != nil {
 		return fmt.Errorf("seek input file: %w", err)
 	}
@@ -189,17 +208,27 @@ func splitDry(c *config) (err error) {
 		return fmt.Errorf("split place not found")
 	}
 
-	if reader.lineno == 1 {
+	var (
+		splitline   = reader.lineno - c.nLinesBack
+		splitoffset = reader.lineoffsets[c.nLinesBack]
+	)
+	if splitline < 1 {
+		return fmt.Errorf("not splitting at line < 1")
+	}
+	if splitline == 1 {
 		return fmt.Errorf("not splitting at line 1")
 	}
 
 	fmt.Printf("would split file %s at line %d, offset %d\n",
-		c.src, reader.lineno, reader.lineoffset)
-	fmt.Printf("line peek: `%s`\n", string(peek(reader.lastb, 62)))
-
+		c.src, splitline, splitoffset)
+	if c.nLinesBack > 0 {
+		ocount = splitoffset
+	} else {
+		fmt.Printf("line peek: `%s`\n", string(peek(reader.lastb, 62)))
+	}
 	fmt.Printf("would write %d bytes to file %s\n", ocount, c.dst)
 
-	_, err = ifile.Seek(reader.lineoffset, 0)
+	_, err = ifile.Seek(splitoffset, 0)
 	if err != nil {
 		return fmt.Errorf("seek input file: %w", err)
 	}
