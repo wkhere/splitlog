@@ -23,7 +23,7 @@ func parseArgs(args []string) (c config, _ error) {
 	flag.StringVarP(&pattern, "pattern", "p", "",
 		"split at given pattern")
 	flag.BoolVarP(&c.overwrite, "force", "f", false,
-		"force overwriting FILE2 if exists")
+		"force overwriting SPLIT file if exists")
 	flag.BoolVarP(&c.dryrun, "dry-run", "n", false,
 		"do not change files, write what would be changed")
 
@@ -32,12 +32,14 @@ func parseArgs(args []string) (c config, _ error) {
 
 	flag.Usage = func() {
 		p := func(a ...interface{}) { fmt.Fprintln(flag.Output(), a...) }
-		p("Usage: splitlog [FLAGS] FILE [FILE2]")
+		p("Usage: splitlog [FLAGS] FILE [SPLIT]")
 		p("Split FILE at given position,",
-			"writing earlier lines to FILE2 and removing them\nfrom FILE.")
-		p("If FILE2 is omitted, FILE.1 wii be used.")
+			"writing earlier lines to SPLIT file and removing\n",
+			"them from FILE.")
+		p("If SPLIT is omitted, `FILE.1` will be used.")
 		flag.PrintDefaults()
 		p("One (and only one) of -i, -p flags must be used.")
+		p("Note that original FILE can be rewritten even without -f flag.")
 	}
 
 	err := flag.Parse(args)
@@ -79,7 +81,7 @@ func parseArgs(args []string) (c config, _ error) {
 	case n == 2:
 		c.from, c.to = rest[0], rest[1]
 	default:
-		return c, fmt.Errorf("need FILE and optionally FILE2")
+		return c, fmt.Errorf("need FILE and optionally SPLIT file")
 	}
 
 	return c, nil
