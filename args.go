@@ -76,10 +76,10 @@ func parseArgs(args []string) (c config, _ error) {
 	rest := flag.Args()
 	switch n := len(rest); {
 	case n == 1:
-		c.from = rest[0]
-		c.to = c.from + ".1"
+		c.src = rest[0]
+		c.dst = c.src + ".1"
 	case n == 2:
-		c.from, c.to = rest[0], rest[1]
+		c.src, c.dst = rest[0], rest[1]
 	default:
 		return c, fmt.Errorf("need FILE and optionally SPLIT file")
 	}

@@ -8,7 +8,7 @@ import (
 
 type config struct {
 	matcher   matcher
-	from, to  string
+	src, dst  string
 	overwrite bool
 
 	dryrun bool
@@ -25,19 +25,19 @@ func main() {
 		die(0)
 	}
 
-	st1, err := os.Stat(c.from)
+	st1, err := os.Stat(c.src)
 	switch {
 	case err != nil:
-		die(1, fmt.Errorf("%s not found", c.from))
+		die(1, fmt.Errorf("%s not found", c.src))
 	case st1.IsDir():
-		die(1, fmt.Errorf("%s is a dir", c.from))
+		die(1, fmt.Errorf("%s is a dir", c.src))
 	}
-	st2, err := os.Stat(c.to)
+	st2, err := os.Stat(c.dst)
 	switch {
 	case os.SameFile(st1, st2):
-		die(1, fmt.Errorf("%s and %s are the same file", c.from, c.to))
+		die(1, fmt.Errorf("%s and %s are the same file", c.src, c.dst))
 	case !c.overwrite && !c.dryrun && !os.IsNotExist(err):
-		die(1, fmt.Errorf("%s already exists", c.to))
+		die(1, fmt.Errorf("%s already exists", c.dst))
 	}
 
 	err = split(&c)

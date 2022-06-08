@@ -52,13 +52,13 @@ func split(c *config) (err error) {
 func splitReal(c *config) (err error) {
 	var ifile, ofile, tfile *os.File
 
-	ifile, err = os.Open(c.from)
+	ifile, err = os.Open(c.src)
 	if err != nil {
 		return err
 	}
 	defer ifile.Close()
 
-	ofile, err = os.OpenFile(c.to, wfileflag(c.overwrite), 0600)
+	ofile, err = os.OpenFile(c.dst, wfileflag(c.overwrite), 0600)
 
 	if err != nil {
 		return err
@@ -93,20 +93,20 @@ func splitReal(c *config) (err error) {
 
 	if !found {
 		ofile.Close()
-		err = os.Remove(c.to)
+		err = os.Remove(c.dst)
 		if err != nil {
 			return fmt.Errorf("split place not found, %w", err)
 		}
-		return fmt.Errorf("split place not found, removed file %s", c.to)
+		return fmt.Errorf("split place not found, removed file %s", c.dst)
 	}
 
 	if reader.lineno == 1 {
 		ofile.Close()
-		os.Remove(c.to)
+		os.Remove(c.dst)
 		if err != nil {
 			return fmt.Errorf("not splitting at line 1, %w", err)
 		}
-		return fmt.Errorf("not splitting at line 1, removed file %s", c.to)
+		return fmt.Errorf("not splitting at line 1, removed file %s", c.dst)
 	}
 
 	err = ofile.Close()
@@ -119,7 +119,7 @@ func splitReal(c *config) (err error) {
 		return fmt.Errorf("seek input file: %w", err)
 	}
 
-	tfile, err = os.CreateTemp(".", c.from+".split")
+	tfile, err = os.CreateTemp(".", c.src+".split")
 	if err != nil {
 		return fmt.Errorf("tempfile: %w", err)
 	}
@@ -153,7 +153,7 @@ func wfileflag(overwrite bool) (flag int) {
 func splitDry(c *config) (err error) {
 	var ifile *os.File
 
-	ifile, err = os.Open(c.from)
+	ifile, err = os.Open(c.src)
 	if err != nil {
 		return err
 	}
@@ -193,10 +193,10 @@ func splitDry(c *config) (err error) {
 	}
 
 	fmt.Printf("would split file %s at line %d, offset %d\n",
-		c.from, reader.lineno, reader.lineoffset)
+		c.src, reader.lineno, reader.lineoffset)
 	fmt.Printf("line peek: `%s`\n", string(peek(reader.lastb, 62)))
 
-	fmt.Printf("would write %d bytes to file %s\n", ocount, c.to)
+	fmt.Printf("would write %d bytes to file %s\n", ocount, c.dst)
 
 	_, err = ifile.Seek(reader.lineoffset, 0)
 	if err != nil {
@@ -207,7 +207,7 @@ func splitDry(c *config) (err error) {
 	if err != nil {
 		return fmt.Errorf("copy split to simulated temp: %w", err)
 	}
-	fmt.Printf("would rewrite file %s to %d bytes\n", c.from, tcount)
+	fmt.Printf("would rewrite file %s to %d bytes\n", c.src, tcount)
 
 	return nil
 }
