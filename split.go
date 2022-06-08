@@ -75,7 +75,8 @@ func splitReal(c *config) (err error) {
 	)
 
 	for {
-		n, err := reader.readBytes()
+		var n int
+		n, err = reader.readBytes()
 
 		if err != nil && err != io.EOF {
 			return fmt.Errorf("read to find split place: %w", err)
@@ -187,7 +188,8 @@ func splitDry(c *config) (err error) {
 	)
 
 	for {
-		n, err := reader.readBytes()
+		var n int
+		n, err = reader.readBytes()
 
 		if err != nil && err != io.EOF {
 			return fmt.Errorf("read to find split place: %w", err)
