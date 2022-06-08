@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -64,12 +63,7 @@ func splitReal(c *config) (err error) {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		cerr := ofile.Close()
-		if cerr != nil && !errors.Is(cerr, os.ErrClosed) && err == nil {
-			err = cerr
-		}
-	}()
+	defer ofile.Close() // Close after err; valid path checks Close retval
 
 	var (
 		reader = counterReader{Reader: bufio.NewReader(ifile)}
@@ -115,6 +109,11 @@ func splitReal(c *config) (err error) {
 		return fmt.Errorf("not splitting at line 1, removed file %s", c.to)
 	}
 
+	err = ofile.Close()
+	if err != nil {
+		return fmt.Errorf("close split file: %w", err)
+	}
+
 	_, err = ifile.Seek(reader.lineoffset, 0)
 	if err != nil {
 		return fmt.Errorf("seek input file: %w", err)
@@ -124,12 +123,7 @@ func splitReal(c *config) (err error) {
 	if err != nil {
 		return fmt.Errorf("tempfile: %w", err)
 	}
-	defer func() {
-		cerr := tfile.Close()
-		if cerr != nil && !errors.Is(cerr, os.ErrClosed) && err == nil {
-			err = cerr
-		}
-	}()
+	defer tfile.Close() // Close after err; valid path checks Close retval
 
 	_, err = io.Copy(tfile, ifile)
 	if err != nil {
@@ -138,7 +132,7 @@ func splitReal(c *config) (err error) {
 	ifile.Close()
 	err = tfile.Close()
 	if err != nil {
-		return err
+		return fmt.Errorf("close tempfile: %w", err)
 	}
 	err = os.Rename(tfile.Name(), ifile.Name())
 	if err != nil {
