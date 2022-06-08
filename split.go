@@ -24,7 +24,10 @@ func (m rxmatcher) matchFrom(r *counterReader) bool {
 	return m.Match(r.lastb)
 }
 
-const maxLinesBack = 5
+const (
+	maxLinesBack = 5
+	maxPeekSize  = 78
+)
 
 type counterReader struct {
 	*bufio.Reader
@@ -32,6 +35,11 @@ type counterReader struct {
 	lineno      int
 	lineoffsets [maxLinesBack + 1]int64
 	lineend     int64
+}
+
+type peeksReader struct {
+	*counterReader
+	linepeeks [maxLinesBack + 1][]byte
 }
 
 func (r *counterReader) readBytes() (n int, err error) {
@@ -43,6 +51,16 @@ func (r *counterReader) readBytes() (n int, err error) {
 	copy(r.lineoffsets[1:], r.lineoffsets[:])
 	r.lineoffsets[0] = r.lineend
 	r.lineend += int64(n)
+
+	return n, err
+}
+
+func (r *peeksReader) readBytes() (n int, err error) {
+	n, err = r.counterReader.readBytes()
+
+	copy(r.linepeeks[1:], r.linepeeks[:])
+	r.linepeeks[0] = peek(r.lastb, maxPeekSize)
+
 	return n, err
 }
 
@@ -182,7 +200,11 @@ func splitDry(c *config) (err error) {
 	defer ifile.Close()
 
 	var (
-		reader = counterReader{Reader: bufio.NewReader(ifile)}
+		reader = peeksReader{
+			counterReader: &counterReader{
+				Reader: bufio.NewReader(ifile),
+			},
+		}
 		found  bool
 		ocount int64
 	)
@@ -198,7 +220,7 @@ func splitDry(c *config) (err error) {
 			break
 		}
 
-		if c.matcher.matchFrom(&reader) {
+		if c.matcher.matchFrom(reader.counterReader) {
 			found = true
 			break
 		}
@@ -225,8 +247,12 @@ func splitDry(c *config) (err error) {
 		c.src, splitline, splitoffset)
 	if c.nLinesBack > 0 {
 		ocount = splitoffset
+		fmt.Printf("%d line peeks:\n", c.nLinesBack+1)
+		for i := c.nLinesBack; i >= 0; i-- {
+			fmt.Printf("%s\n", reader.linepeeks[i])
+		}
 	} else {
-		fmt.Printf("line peek: `%s`\n", string(peek(reader.lastb, 62)))
+		fmt.Printf("1 line peek:\n%s\n", reader.linepeeks[0])
 	}
 	fmt.Printf("would write %d bytes to file %s\n", ocount, c.dst)
 
@@ -249,7 +275,7 @@ func splitDry(c *config) (err error) {
 func peek(b []byte, max int) []byte {
 	b = chomp(b)
 	if max < len(b) {
-		return b[:max]
+		return append(b[:max], []byte("..")...)
 	}
 	return b
 }
