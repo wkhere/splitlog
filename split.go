@@ -93,20 +93,12 @@ func splitReal(c *config) (err error) {
 
 	if !found {
 		ofile.Close()
-		err = os.Remove(c.dst)
-		if err != nil {
-			return fmt.Errorf("split place not found, %w", err)
-		}
-		return fmt.Errorf("split place not found, removed file %s", c.dst)
+		return removeSplit(c.dst, "split place not found")
 	}
 
 	if reader.lineno == 1 {
 		ofile.Close()
-		os.Remove(c.dst)
-		if err != nil {
-			return fmt.Errorf("not splitting at line 1, %w", err)
-		}
-		return fmt.Errorf("not splitting at line 1, removed file %s", c.dst)
+		return removeSplit(c.dst, "not splitting at line 1")
 	}
 
 	err = ofile.Close()
@@ -136,7 +128,7 @@ func splitReal(c *config) (err error) {
 	if err != nil {
 		return fmt.Errorf("close tempfile: %w", err)
 	}
-	err = os.Rename(tfile.Name(), ifile.Name())
+	err = os.Rename(tfile.Name(), c.src)
 	if err != nil {
 		return fmt.Errorf("rename tempfile to orig: %w", err)
 	}
@@ -150,6 +142,14 @@ func wfileflag(overwrite bool) (flag int) {
 		flag |= os.O_EXCL
 	}
 	return
+}
+
+func removeSplit(file, reason string) error {
+	err := os.Remove(file)
+	if err != nil {
+		return fmt.Errorf("%s, %w", reason, err)
+	}
+	return fmt.Errorf("%s, removed file %s", reason, file)
 }
 
 func splitDry(c *config) (err error) {
