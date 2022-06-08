@@ -50,7 +50,7 @@ func split(c *config) (err error) {
 }
 
 func splitReal(c *config) (err error) {
-	var ifile, ofile, tfile *os.File
+	var ifile, ofile *os.File
 
 	ifile, err = os.Open(c.src)
 	if err != nil {
@@ -119,6 +119,8 @@ func splitReal(c *config) (err error) {
 		return fmt.Errorf("seek input file: %w", err)
 	}
 
+	var tfile *os.File
+
 	tfile, err = os.CreateTemp(".", c.src+".split")
 	if err != nil {
 		return fmt.Errorf("tempfile: %w", err)
@@ -163,7 +165,6 @@ func splitDry(c *config) (err error) {
 		reader = counterReader{Reader: bufio.NewReader(ifile)}
 		found  bool
 		ocount int64
-		tcount int64
 	)
 
 	for {
@@ -202,6 +203,8 @@ func splitDry(c *config) (err error) {
 	if err != nil {
 		return fmt.Errorf("seek input file: %w", err)
 	}
+
+	var tcount int64
 
 	tcount, err = io.Copy(io.Discard, ifile)
 	if err != nil {
