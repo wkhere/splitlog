@@ -200,6 +200,7 @@ func splitDry(c *config) (err error) {
 
 	fmt.Printf("would split file %s at line %d, offset %d\n",
 		c.from, reader.lineno, reader.lineoffset)
+	fmt.Printf("line peek: `%s`\n", string(peek(reader.lastb, 62)))
 
 	fmt.Printf("would write %d bytes to file %s\n", ocount, c.to)
 
@@ -215,4 +216,24 @@ func splitDry(c *config) (err error) {
 	fmt.Printf("would rewrite file %s to %d bytes\n", c.from, tcount)
 
 	return nil
+}
+
+func peek(b []byte, max int) []byte {
+	b = chomp(b)
+	if max < len(b) {
+		return b[:max]
+	}
+	return b
+}
+
+func chomp(b []byte) []byte {
+	for len(b) > 0 {
+		l := len(b) - 1
+		if b[l] == '\n' || b[l] == '\r' {
+			b = b[:l]
+		} else {
+			break
+		}
+	}
+	return b
 }
