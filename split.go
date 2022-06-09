@@ -26,7 +26,8 @@ func (m rxmatcher) matchFrom(r *counterReader) bool {
 
 const (
 	maxLinesBack = 5
-	maxPeekSize  = 78
+	previewLines = 2 // before and after match; must be < maxLinesBack
+	maxPeekSize  = 76
 )
 
 type counterReader struct {
@@ -233,6 +234,7 @@ func splitDry(c *config) (err error) {
 	}
 
 	var (
+		matchline   = reader.lineno
 		splitline   = reader.lineno - c.nLinesBack
 		splitoffset = reader.lineoffsets[c.nLinesBack]
 	)
@@ -242,18 +244,57 @@ func splitDry(c *config) (err error) {
 	if splitline == 1 {
 		return fmt.Errorf("not splitting at line 1")
 	}
+	if c.nLinesBack > 0 {
+		ocount = splitoffset
+	}
 
 	fmt.Printf("* would split file %s at line %d, offset %d\n",
 		c.src, splitline, splitoffset)
-	if c.nLinesBack > 0 {
-		ocount = splitoffset
-		fmt.Printf("* %d line peeks:\n", c.nLinesBack+1)
-		for i := c.nLinesBack; i >= 0; i-- {
+	if c.nLinesBack == 0 {
+		fmt.Println("* preview, `>` shows the split")
+	} else {
+		fmt.Println("* preview, `>` shows the split, `=` shows the match")
+	}
+
+	{
+		// Preview algo:
+		// for pre-match lines, show either #nLinesBack or #previewLines
+		// number of lines, which is bigger. Make correction for a case
+		// when such number of lines was not read at all before match.
+		// Can't happen with nLinesBack, as it would be exited above,
+		// but can happen with #previewLines.
+		// Mark split line on the way.
+		// Show match line, with a mark.
+		// Show #previewLines next lines, ofc if they exist in the file
+		// (which we don't know yet atm).
+		// For the copy simulation, file will be rewinded to the split line
+		// anyway.
+		var ipreview int // 1st index in the peeks table, going down
+
+		ipreview = max(c.nLinesBack, previewLines)
+		ipreview = min(ipreview, matchline-1)
+
+		for i := ipreview; i >= 0; i-- {
+			switch i {
+			case c.nLinesBack:
+				fmt.Print("> ")
+			case 0:
+				fmt.Print("= ")
+			default:
+				fmt.Print("  ")
+			}
 			fmt.Printf("%s\n", reader.linepeeks[i])
 		}
-	} else {
-		fmt.Printf("* 1 line peek:\n%s\n", reader.linepeeks[0])
+		// post-match lines, reuse the reader which is to be discarded anyway
+		for i := 0; i < previewLines; i++ {
+			_, err = reader.readBytes()
+			if err != nil && err != io.EOF {
+				return fmt.Errorf("read input file past the match: %w", err)
+			}
+			fmt.Printf("  %s\n", reader.linepeeks[0])
+		}
 	}
+
 	fmt.Printf("* would write %d bytes to file %s\n", ocount, c.dst)
 
 	_, err = ifile.Seek(splitoffset, 0)
@@ -290,4 +331,18 @@ func chomp(b []byte) []byte {
 		}
 	}
 	return b
+}
+
+func min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
 }
