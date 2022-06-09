@@ -1,0 +1,3 @@
+- consider shoring some context (line grep -C or diff) regardless
+  of the -b flag; then, the match and the start of split would be
+  displayed in the context
