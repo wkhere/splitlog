@@ -243,18 +243,18 @@ func splitDry(c *config) (err error) {
 		return fmt.Errorf("not splitting at line 1")
 	}
 
-	fmt.Printf("would split file %s at line %d, offset %d\n",
+	fmt.Printf("* would split file %s at line %d, offset %d\n",
 		c.src, splitline, splitoffset)
 	if c.nLinesBack > 0 {
 		ocount = splitoffset
-		fmt.Printf("%d line peeks:\n", c.nLinesBack+1)
+		fmt.Printf("* %d line peeks:\n", c.nLinesBack+1)
 		for i := c.nLinesBack; i >= 0; i-- {
 			fmt.Printf("%s\n", reader.linepeeks[i])
 		}
 	} else {
-		fmt.Printf("1 line peek:\n%s\n", reader.linepeeks[0])
+		fmt.Printf("* 1 line peek:\n%s\n", reader.linepeeks[0])
 	}
-	fmt.Printf("would write %d bytes to file %s\n", ocount, c.dst)
+	fmt.Printf("* would write %d bytes to file %s\n", ocount, c.dst)
 
 	_, err = ifile.Seek(splitoffset, 0)
 	if err != nil {
@@ -267,7 +267,7 @@ func splitDry(c *config) (err error) {
 	if err != nil {
 		return fmt.Errorf("copy split to simulated temp: %w", err)
 	}
-	fmt.Printf("would rewrite file %s to %d bytes\n", c.src, tcount)
+	fmt.Printf("* would rewrite file %s to %d bytes\n", c.src, tcount)
 
 	return nil
 }
