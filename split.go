@@ -27,7 +27,7 @@ func (m rxmatcher) matchFrom(r *counterReader) bool {
 const (
 	maxLinesBack = 5
 	previewLines = 2 // before and after match; must be < maxLinesBack
-	maxPeekSize  = 76
+	maxPeekSize  = 78
 )
 
 type counterReader struct {
@@ -313,10 +313,10 @@ func splitDry(c *config) (err error) {
 	return nil
 }
 
-func peek(b []byte, max int) []byte {
+func peek(b []byte, limit int) []byte {
 	b = chomp(b)
-	if max < len(b) {
-		return append(b[:max], []byte("..")...)
+	if len(b) > limit {
+		return append(b[:limit-2], []byte("..")...)
 	}
 	return b
 }
