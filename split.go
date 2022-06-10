@@ -62,6 +62,9 @@ func (r *counterReader) readBytes() (n int, err error) {
 
 func (r *peeksReader) readBytes() (n int, err error) {
 	n, err = r.counterReader.readBytes()
+	if err != nil {
+		return n, err
+	}
 
 	copy(r.linepeeks[1:], r.linepeeks[:])
 	r.linepeeks[0] = peek(r.lastb, maxPeekSize)
