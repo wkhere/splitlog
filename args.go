@@ -83,6 +83,9 @@ func parseArgs(args []string) (c config, _ error) {
 		if back > maxLinesBack {
 			return c, fmt.Errorf("max value for -b is %d", maxLinesBack)
 		}
+		if flag.Changed("line") && int(line)-int(back) < 2 {
+			return c, fmt.Errorf("split does not make sense at line < 2")
+		}
 		c.nLinesBack = int(back)
 	}
 
