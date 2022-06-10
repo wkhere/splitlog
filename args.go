@@ -22,7 +22,7 @@ func parseArgs(args []string) (c config, _ error) {
 	flag.UintVarP(&line, "line", "i", 0,
 		"split at i-th line")
 	flag.StringVarP(&pattern, "pattern", "p", "",
-		"split at given pattern")
+		"split at given regexp pattern")
 	flag.UintVarP(&back, "back-from-match", "b", 0,
 		fmt.Sprintf(
 			"number of lines to go back from the match, max=%d",
