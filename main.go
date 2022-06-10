@@ -29,7 +29,7 @@ func main() {
 	st1, err := os.Stat(c.src)
 	switch {
 	case err != nil:
-		die(1, fmt.Errorf("%s not found", c.src))
+		die(1, fmt.Errorf("file %s not found", c.src))
 	case st1.IsDir():
 		die(1, fmt.Errorf("%s is a dir", c.src))
 	}
