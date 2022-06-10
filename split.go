@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -46,6 +47,9 @@ type peeksReader struct {
 func (r *counterReader) readBytes() (n int, err error) {
 	r.lastb, err = r.Reader.ReadBytes('\n')
 	n = len(r.lastb)
+	if bytes.ContainsRune(r.lastb, 0) {
+		return n, fmt.Errorf("binary input")
+	}
 	if err == nil || n > 0 {
 		r.lineno++
 	}
