@@ -19,8 +19,8 @@ func parseArgs(args []string) (c config, _ error) {
 	flag := pflag.NewFlagSet("flags", pflag.ContinueOnError)
 	flag.SortFlags = false
 
-	flag.UintVarP(&line, "line", "i", 0,
-		"split at i-th line")
+	flag.UintVarP(&line, "line", "l", 0,
+		"split at given line number")
 	flag.StringVarP(&pattern, "pattern", "p", "",
 		"split at given regexp pattern")
 	flag.UintVarP(&back, "back-from-match", "b", 0,
@@ -44,7 +44,7 @@ func parseArgs(args []string) (c config, _ error) {
 			"them from FILE.")
 		p("If SPLIT is omitted, `FILE.1` will be used.")
 		flag.PrintDefaults()
-		p("One (and only one) of -i, -p flags must be used.")
+		p("One (and only one) of -l, -p flags must be used.")
 		p("Note that original FILE can be rewritten even without -f flag.")
 	}
 
@@ -62,7 +62,7 @@ func parseArgs(args []string) (c config, _ error) {
 
 	switch {
 	case flag.Changed("line") == flag.Changed("pattern"):
-		return c, fmt.Errorf("need -i or -p")
+		return c, fmt.Errorf("need -l or -p")
 
 	case flag.Changed("line") && line < 2:
 		return c, fmt.Errorf("split does not make sense at line < 2")
