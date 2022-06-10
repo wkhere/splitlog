@@ -1,3 +1,5 @@
 + consider showing some context (line grep -C or diff) regardless
   of the -b flag; then, the match and the start of split would be
   displayed in the context -- done, called preview.
+
+- detect if input is a binary file and stop processing if so
