@@ -62,9 +62,6 @@ func (r *counterReader) readBytes() (n int, err error) {
 
 func (r *peeksReader) readBytes() (n int, err error) {
 	n, err = r.counterReader.readBytes()
-	if err != nil {
-		return n, err
-	}
 
 	copy(r.linepeeks[1:], r.linepeeks[:])
 	r.linepeeks[0] = peek(r.lastb, maxPeekSize)
@@ -294,9 +291,12 @@ func splitDry(c *config) (err error) {
 		}
 		// post-match lines, reuse the reader which is to be discarded anyway
 		for i := 0; i < previewLines; i++ {
-			_, err = reader.readBytes()
+			n, err := reader.readBytes()
 			if err != nil && err != io.EOF {
 				return fmt.Errorf("read input file past the match: %w", err)
+			}
+			if err == io.EOF && n == 0 {
+				break
 			}
 			fmt.Printf("  %s\n", reader.linepeeks[0])
 		}
