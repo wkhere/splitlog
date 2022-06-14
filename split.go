@@ -254,11 +254,7 @@ func splitDry(c *config) (err error) {
 
 	fmt.Printf("* would split file %s at line %d, offset %d\n",
 		c.src, splitline, splitoffset)
-	if c.nLinesBack == 0 {
-		fmt.Println("* preview, `>` shows the split")
-	} else {
-		fmt.Println("* preview, `>` shows the split, `=` shows the match")
-	}
+	fmt.Println("* preview:")
 
 	{
 		// Preview algo:
