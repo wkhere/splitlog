@@ -262,20 +262,23 @@ func splitDry(c *config) (err error) {
 
 	{
 		// Preview algo:
-		// for pre-match lines, show either #nLinesBack or #previewLines
-		// number of lines, which is bigger. Make correction for a case
-		// when such number of lines was not read at all before match.
-		// Can't happen with nLinesBack, as it would be exited above,
-		// but can happen with #previewLines.
-		// Mark split line on the way.
-		// Show match line, with a mark.
-		// Show #previewLines next lines, ofc if they exist in the file
+		// Show #previewLines number of lines before the split line.
+		// Make a correction when such number of lines exceeds the size
+		// of the peeks table, or was not existing in the file at all.
+		// Show the split line with a mark.
+		// Show possible extra lines between split and match.
+		// Show the match line with a mark - if differs from the split line.
+		// For all above lines, it's iterating from the right index
+		// in the peeks tab, down to zero, inclusive. Zero is the match line.
+		// Then show #previewLines next lines, ofc if they exist in the file
 		// (which we don't know yet atm).
 		// For the copy simulation, file will be rewinded to the split line
 		// anyway.
+
 		var ipreview int // 1st index in the peeks table, going down
 
-		ipreview = max(c.nLinesBack, previewLines)
+		ipreview = c.nLinesBack + previewLines
+		ipreview = min(ipreview, maxLinesBack)
 		ipreview = min(ipreview, matchline-1)
 
 		for i := ipreview; i >= 0; i-- {
@@ -342,13 +345,6 @@ func chomp(b []byte) []byte {
 
 func min(x, y int) int {
 	if x < y {
-		return x
-	}
-	return y
-}
-
-func max(x, y int) int {
-	if x > y {
 		return x
 	}
 	return y
