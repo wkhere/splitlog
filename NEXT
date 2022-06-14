@@ -3,3 +3,5 @@
   displayed in the context -- done, called preview.
 
 + detect if input is a binary file and stop processing if so
+
+- -e --end option to 'split' at the end (orig file becomes truncated)
