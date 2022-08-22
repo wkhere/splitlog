@@ -26,9 +26,10 @@ func (m rxmatcher) matchFrom(r *counterReader) bool {
 }
 
 const (
-	maxLinesBack = 5
-	previewLines = 2 // before and after match; must be < maxLinesBack
-	maxPeekSize  = 78
+	maxLinesBack     = 6
+	previewLinesBack = 4 // must be < maxLinesBack
+	previewLinesFwd  = 3
+	maxPeekSize      = 78
 )
 
 type counterReader struct {
@@ -258,7 +259,7 @@ func splitDry(c *config) (err error) {
 
 	{
 		// Preview algo:
-		// Show #previewLines number of lines before the split line.
+		// Show #previewLinesBack number of lines before the split line.
 		// Make a correction when such number of lines exceeds the size
 		// of the peeks table, or was not existing in the file at all.
 		// Show the split line with a mark.
@@ -266,14 +267,14 @@ func splitDry(c *config) (err error) {
 		// Show the match line with a mark - if differs from the split line.
 		// For all above lines, it's iterating from the right index
 		// in the peeks tab, down to zero, inclusive. Zero is the match line.
-		// Then show #previewLines next lines, ofc if they exist in the file
-		// (which we don't know yet atm).
+		// Then show #previewLinesFwd next lines, ofc if they exist
+		// in the file (which we don't know yet atm).
 		// For the copy simulation, file will be rewinded to the split line
 		// anyway.
 
 		var ipreview int // 1st index in the peeks table, going down
 
-		ipreview = c.nLinesBack + previewLines
+		ipreview = c.nLinesBack + previewLinesBack
 		ipreview = min(ipreview, maxLinesBack)
 		ipreview = min(ipreview, matchline-1)
 
@@ -289,7 +290,7 @@ func splitDry(c *config) (err error) {
 			fmt.Printf("%s\n", reader.linepeeks[i])
 		}
 		// post-match lines, reuse the reader which is to be discarded anyway
-		for i := 0; i < previewLines; i++ {
+		for i := 0; i < previewLinesFwd; i++ {
 			n, err := reader.readBytes()
 			if err != nil && err != io.EOF {
 				return fmt.Errorf("read input file past the match: %w", err)
