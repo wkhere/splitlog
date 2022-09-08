@@ -87,7 +87,6 @@ func splitReal(c *config) (err error) {
 	defer ifile.Close()
 
 	ofile, err = os.OpenFile(c.dst, wfileflag(c.overwrite), 0600)
-
 	if err != nil {
 		return err
 	}
