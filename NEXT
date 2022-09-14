@@ -4,4 +4,5 @@
 
 + detect if input is a binary file and stop processing if so
 
-- -e --end option to 'split' at the end (orig file becomes truncated)
+- -a --always option to split always with -p, if pattern not found:
+  just rotate main file to the 2nd one
