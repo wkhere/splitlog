@@ -12,8 +12,10 @@ type config struct {
 	overwrite  bool
 	nLinesBack int
 
-	dryrun bool
-	help   func(io.Writer)
+	dryrun      bool
+	widePreview bool
+
+	help func(io.Writer)
 }
 
 func main() {

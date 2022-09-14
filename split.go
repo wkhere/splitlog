@@ -29,7 +29,8 @@ const (
 	maxLinesBack     = 6
 	previewLinesBack = 4 // must be < maxLinesBack
 	previewLinesFwd  = 3
-	maxPeekSize      = 78
+	defaultPeekSize  = 78
+	maxPeekSize      = 1024
 )
 
 type counterReader struct {
@@ -42,6 +43,7 @@ type counterReader struct {
 
 type peeksReader struct {
 	*counterReader
+	peekSize  int
 	linepeeks [maxLinesBack + 1][]byte
 }
 
@@ -65,7 +67,7 @@ func (r *peeksReader) readBytes() (n int, err error) {
 	n, err = r.counterReader.readBytes()
 
 	copy(r.linepeeks[1:], r.linepeeks[:])
-	r.linepeeks[0] = peek(r.lastb, maxPeekSize)
+	r.linepeeks[0] = peek(r.lastb, r.peekSize)
 
 	return n, err
 }
@@ -213,6 +215,12 @@ func splitDry(c *config) (err error) {
 		found  bool
 		ocount int64
 	)
+
+	if c.widePreview {
+		reader.peekSize = maxPeekSize
+	} else {
+		reader.peekSize = defaultPeekSize
+	}
 
 	for {
 		var n int

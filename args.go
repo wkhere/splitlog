@@ -32,6 +32,8 @@ func parseArgs(args []string) (c config, _ error) {
 		"force overwriting SPLIT file if exists")
 	flag.BoolVarP(&c.dryrun, "dry-run", "n", false,
 		"do not change files, show what would be changed")
+	flag.BoolVar(&c.widePreview, "wide", false,
+		"show wide preview (long lines) with -n")
 
 	flag.BoolVarP(&help, "help", "h", false,
 		"show this help and exit")
