@@ -25,7 +25,7 @@ func main() {
 	}
 	if c.help != nil {
 		c.help(os.Stdout)
-		die(0)
+		os.Exit(0)
 	}
 
 	st1, err := os.Stat(c.src)
