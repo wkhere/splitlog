@@ -49,12 +49,12 @@ func main() {
 	}
 }
 
-func die(exitcode int, msgs ...interface{}) {
+func die(exitcode int, msgs ...any) {
 	log(msgs...)
 	os.Exit(exitcode)
 }
 
-func log(msgs ...interface{}) {
+func log(msgs ...any) {
 	if len(msgs) > 0 {
 		fmt.Fprint(os.Stderr, "splitlog: ")
 		fmt.Fprintln(os.Stderr, msgs...)

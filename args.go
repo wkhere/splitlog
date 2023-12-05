@@ -39,7 +39,7 @@ func parseArgs(args []string) (c config, _ error) {
 		"show this help and exit")
 
 	flag.Usage = func() {
-		p := func(a ...interface{}) { fmt.Fprintln(flag.Output(), a...) }
+		p := func(a ...any) { fmt.Fprintln(flag.Output(), a...) }
 		p("Usage: splitlog [FLAGS] FILE [SPLIT]")
 		p("Split FILE at given position,",
 			"writing earlier lines to SPLIT file and removing\n",
