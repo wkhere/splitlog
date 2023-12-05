@@ -18,6 +18,25 @@ type config struct {
 	help func(io.Writer)
 }
 
+func run(c *config) error {
+	st1, err := os.Stat(c.src)
+	switch {
+	case err != nil:
+		return fmt.Errorf("file %s not found", c.src)
+	case st1.IsDir():
+		return fmt.Errorf("%s is a dir", c.src)
+	}
+	st2, err := os.Stat(c.dst)
+	switch {
+	case os.SameFile(st1, st2):
+		return fmt.Errorf("%s and %s are the same file", c.src, c.dst)
+	case !c.overwrite && !c.dryrun && !os.IsNotExist(err):
+		return fmt.Errorf("%s already exists", c.dst)
+	}
+
+	return split(c)
+}
+
 func main() {
 	c, err := parseArgs(os.Args[1:])
 	if err != nil {
@@ -28,22 +47,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	st1, err := os.Stat(c.src)
-	switch {
-	case err != nil:
-		die(1, fmt.Errorf("file %s not found", c.src))
-	case st1.IsDir():
-		die(1, fmt.Errorf("%s is a dir", c.src))
-	}
-	st2, err := os.Stat(c.dst)
-	switch {
-	case os.SameFile(st1, st2):
-		die(1, fmt.Errorf("%s and %s are the same file", c.src, c.dst))
-	case !c.overwrite && !c.dryrun && !os.IsNotExist(err):
-		die(1, fmt.Errorf("%s already exists", c.dst))
-	}
-
-	err = split(&c)
+	err = run(&c)
 	if err != nil {
 		die(1, err)
 	}
