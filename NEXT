@@ -6,3 +6,5 @@
 
 - -a --always option to split always with -p, if pattern not found:
   just rotate main file to the 2nd one
+
+- bug: mem is eaten on ReadBytes when input never has an LF, like /dev/zero
