@@ -31,6 +31,7 @@ const (
 	previewLinesFwd  = 3
 	defaultPeekSize  = 78
 	maxPeekSize      = 1024
+	maxLineSize      = 4096
 )
 
 type counterReader struct {
@@ -47,8 +48,8 @@ type peeksReader struct {
 	linepeeks [maxLinesBack + 1][]byte
 }
 
-func (r *counterReader) readBytes() (n int, err error) {
-	r.lastb, err = r.Reader.ReadBytes('\n')
+func (r *counterReader) readSlice() (n int, err error) {
+	r.lastb, err = r.Reader.ReadSlice('\n')
 	n = len(r.lastb)
 	if bytes.ContainsRune(r.lastb, 0) {
 		return n, fmt.Errorf("binary input")
@@ -63,8 +64,8 @@ func (r *counterReader) readBytes() (n int, err error) {
 	return n, err
 }
 
-func (r *peeksReader) readBytes() (n int, err error) {
-	n, err = r.counterReader.readBytes()
+func (r *peeksReader) readSlice() (n int, err error) {
+	n, err = r.counterReader.readSlice()
 
 	copy(r.linepeeks[1:], r.linepeeks[:])
 	r.linepeeks[0] = peek(r.lastb, r.peekSize)
@@ -95,13 +96,15 @@ func splitReal(c *config) (err error) {
 	defer ofile.Close() // Close after err; valid path checks Close retval
 
 	var (
-		reader = counterReader{Reader: bufio.NewReader(ifile)}
-		found  bool
+		reader = counterReader{
+			Reader: bufio.NewReaderSize(ifile, maxLineSize),
+		}
+		found bool
 	)
 
 	for {
 		var n int
-		n, err = reader.readBytes()
+		n, err = reader.readSlice()
 
 		if err != nil && err != io.EOF {
 			return fmt.Errorf("read to find split place: %w", err)
@@ -209,7 +212,7 @@ func splitDry(c *config) (err error) {
 	var (
 		reader = peeksReader{
 			counterReader: &counterReader{
-				Reader: bufio.NewReader(ifile),
+				Reader: bufio.NewReaderSize(ifile, maxLineSize),
 			},
 		}
 		found  bool
@@ -224,7 +227,7 @@ func splitDry(c *config) (err error) {
 
 	for {
 		var n int
-		n, err = reader.readBytes()
+		n, err = reader.readSlice()
 
 		if err != nil && err != io.EOF {
 			return fmt.Errorf("read to find split place: %w", err)
@@ -298,7 +301,7 @@ func splitDry(c *config) (err error) {
 		}
 		// post-match lines, reuse the reader which is to be discarded anyway
 		for i := 0; i < previewLinesFwd; i++ {
-			n, err := reader.readBytes()
+			n, err := reader.readSlice()
 			if err != nil && err != io.EOF {
 				return fmt.Errorf("read input file past the match: %w", err)
 			}
