@@ -1,5 +1,11 @@
 go:
-	go vet
+	go build
+
+
+install:
 	go install
 
-.PHONY: go
+vet:
+	go vet
+
+.PHONY: go install vet
